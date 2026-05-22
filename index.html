@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate Your Experience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Lato', sans-serif;
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFE8CC 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  margin: 0;
+}
+.card {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.05);
+  max-width: 440px;
+  width: 100%;
+  padding: 40px 32px;
+  position: relative;
+  animation: cardIn 0.5s ease-out forwards;
+}
+@keyframes cardIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.lang-switcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  padding: 4px;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.lang-btn {
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  background: transparent;
+  color: #888;
+  transition: all 0.2s;
+}
+.lang-btn.active {
+  background: #E85D04;
+  color: #fff;
+}
+.lang-btn:hover:not(.active) { color: #E85D04; }
+
+.view { display: none; }
+.view.active { display: block; }
+.view-transition {
+  animation: viewFadeIn 0.2s ease-out;
+}
+@keyframes viewFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 600; }
+h1 { font-size: 28px; color: #1a1a1a; margin-bottom: 8px; line-height: 1.3; }
+.subtitle { font-size: 16px; color: #777; margin-bottom: 28px; font-weight: 300; }
+.tap-hint { font-size: 14px; color: #aaa; margin-bottom: 16px; text-align: center; }
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+.star {
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.star svg { width: 100%; height: 100%; display: block; }
+.star svg path { fill: #E5E7EB; transition: fill 0.15s ease; }
+.star.filled svg path { fill: #F59E0B; }
+.star:hover { transform: scale(1.1); }
+.star.selected { animation: starPop 0.4s ease forwards; }
+@keyframes starPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.rating-label { text-align: center; font-size: 18px; font-weight: 700; color: #E85D04; min-height: 28px; margin-top: 8px; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.active { display: flex; }
+.bottom-sheet {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 32px 24px 40px;
+  width: 100%;
+  max-width: 440px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
+}
+.overlay.active .bottom-sheet { transform: translateY(0); }
+.bottom-sheet .stars { margin-bottom: 20px; }
+.bottom-sheet .star { cursor: default; width: 44px; height: 44px; }
+.bottom-sheet .star:hover { transform: none; }
+.confirm-title { font-family: 'Playfair Display', serif; font-size: 22px; text-align: center; margin-bottom: 8px; }
+.confirm-body { color: #666; text-align: center; margin-bottom: 24px; font-size: 15px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 12px; }
+.btn {
+  flex: 1;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Lato', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: #E85D04; color: #fff; }
+.btn-primary:hover { background: #D05200; transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: #888; border: 2px solid #E5E7EB; }
+.btn-ghost:hover { border-color: #ccc; color: #555; }
+
+.btn-full { width: 100%; }
+
+.redirect-icon { text-align: center; margin-bottom: 16px; }
+.redirect-icon svg { width: 80px; height: 80px; }
+.countdown-wrap { text-align: center; margin: 24px 0; }
+.countdown-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 72px;
+  font-weight: 700;
+  color: #E85D04;
+  line-height: 1;
+  animation: countPulse 0.3s ease-out;
+}
+@keyframes countPulse {
+  0% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.countdown-label { font-size: 14px; color: #888; margin-top: 4px; }
+.redirect-body { color: #666; text-align: center; margin-bottom: 8px; font-size: 15px; }
+.already-icon { text-align: center; font-size: 56px; margin-bottom: 16px; }
+
+@media (min-width: 480px) {
+  .star { width: 80px; height: 80px; }
+  .stars { gap: 12px; }
+  .card { padding: 48px 40px; }
+  h1 { font-size: 32px; }
+}
+@media (max-width: 360px) {
+  .card { padding: 24px 16px; }
+  .star { width: 48px; height: 48px; }
+  .stars { gap: 4px; }
+}
+
+[dir="rtl"] .lang-switcher { right: auto; left: 16px; }
+
+</style>
+</head>
+<body>
+
+<div class="lang-switcher">
+  <button class="lang-btn" data-lang="ar">AR</button>
+  <button class="lang-btn" data-lang="fr">FR</button>
+  <button class="lang-btn" data-lang="en">EN</button>
+</div>
+
+<div class="card" id="app-card">
+  <!-- VIEW: Rating -->
+  <div class="view view-transition" id="view-rating">
+    <h1 id="i18n-title" data-i18n="title">How was your experience?</h1>
+    <div class="subtitle" id="i18n-subtitle" data-i18n="subtitle">Your feedback means the world to us</div>
+    <div class="tap-hint" id="i18n-tap-hint" data-i18n="tap_hint">Tap the stars to rate us</div>
+    <div class="stars" id="star-container">
+      <div class="star" data-index="1">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="star" data-index="2">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="star" data-index="3">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="star" data-index="4">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div class="star" data-index="5">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+    </div>
+    <div class="rating-label" id="rating-label"></div>
+  </div>
+
+  <!-- VIEW: Confirmation -->
+  <div class="overlay" id="view-confirm">
+    <div class="bottom-sheet">
+      <div class="stars" id="confirm-stars"></div>
+      <div class="confirm-title" id="i18n-confirm-title" data-i18n="confirm_title">Confirm your rating</div>
+      <div class="confirm-body" id="i18n-confirm-body" data-i18n="confirm_body">Your feedback will go directly to our team</div>
+      <div class="confirm-actions">
+        <button class="btn btn-primary" id="confirm-yes" data-i18n="confirm_yes">Yes, send it</button>
+        <button class="btn btn-ghost" id="confirm-no" data-i18n="confirm_no">Go back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: Redirect -->
+  <div class="view view-transition" id="view-redirect" style="display:none;">
+    <div class="redirect-icon">
+      <svg viewBox="0 0 24 24" width="80" height="80"><path fill="#F59E0B" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
+    <h1 id="i18n-maps-title" data-i18n="maps_title">Thank you for the great review!</h1>
+    <div class="redirect-body" id="i18n-maps-body" data-i18n="maps_body">Redirecting you to Google Maps in</div>
+    <div class="countdown-wrap" id="countdown-wrap">
+      <div class="countdown-number" id="countdown-number">3</div>
+      <div class="countdown-label" id="i18n-maps-seconds" data-i18n="maps_seconds">seconds</div>
+    </div>
+    <button class="btn btn-primary btn-full" id="go-now-btn" data-i18n="maps_btn">Go now</button>
+  </div>
+
+  <!-- VIEW: Already reviewed -->
+  <div class="view view-transition" id="view-already" style="display:none;">
+    <div class="already-icon">⭐</div>
+    <h1 id="i18n-already-title" data-i18n="already_title">You've already left a review</h1>
+    <div class="subtitle" id="i18n-already-body" data-i18n="already_body">Thank you! Your review has already been recorded.</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ✏️  CONFIGURATION — Edit only this block
+// ============================================================
+const CONFIG = {
+  googleMapsUrl: 'https://search.google.com/local/writereview?placeid=ChIJCwDrshHJsw0R0EurpcipwXo',
+  googleFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSet7OxmQ5CUZOCabu4Z940xtNLymq_Budh61EOXmVBVaP_-GA/viewform?usp=dialog',
+  blockDays: 0,
+  defaultLang: 'fr',
+};
+// ============================================================
+
+const T = {
+  ar: {
+    title:            'كيف كانت تجربتك معنا؟',
+    subtitle:         'رأيك يهمنا كثيراً',
+    tap_hint:         'اضغط على النجوم لتقييمنا',
+    rating_labels:    ['', 'سيء جداً', 'سيء', 'مقبول', 'جيد', 'ممتاز'],
+    confirm_title:    'هل أنت متأكد؟',
+    confirm_body:     'ستشارك تقييمك مع فريقنا مباشرة',
+    confirm_yes:      'نعم، أرسل',
+    confirm_no:       'تراجع',
+    maps_title:       'شكراً على تقييمك الرائع! ⭐',
+    maps_body:        'سيتم تحويلك إلى Google Maps خلال',
+    maps_seconds:     'ثوانٍ',
+    maps_btn:         'انتقل الآن',
+    already_title:    'لقد قيّمتنا مسبقاً',
+    already_body:     'شكراً لك! لقد أرسلت تقييمك من قبل.',
+  },
+  fr: {
+    title:            'Comment était votre expérience ?',
+    subtitle:         'Votre avis est précieux pour nous',
+    tap_hint:         'Appuyez sur les étoiles pour nous noter',
+    rating_labels:    ['', 'Très mauvais', 'Mauvais', 'Correct', 'Bien', 'Excellent'],
+    confirm_title:    'Confirmez votre avis',
+    confirm_body:     'Votre retour sera envoyé directement à notre équipe',
+    confirm_yes:      'Oui, envoyer',
+    confirm_no:       'Annuler',
+    maps_title:       'Merci pour votre super avis ! ⭐',
+    maps_body:        'Vous serez redirigé vers Google Maps dans',
+    maps_seconds:     'secondes',
+    maps_btn:         'Y aller maintenant',
+    already_title:    'Vous avez déjà laissé un avis',
+    already_body:     'Merci ! Votre avis a déjà été enregistré.',
+  },
+  en: {
+    title:            'How was your experience?',
+    subtitle:         'Your feedback means the world to us',
+    tap_hint:         'Tap the stars to rate us',
+    rating_labels:    ['', 'Very bad', 'Bad', 'Okay', 'Good', 'Excellent'],
+    confirm_title:    'Confirm your rating',
+    confirm_body:     'Your feedback will go directly to our team',
+    confirm_yes:      'Yes, send it',
+    confirm_no:       'Go back',
+    maps_title:       'Thank you for the great review! ⭐',
+    maps_body:        'Redirecting you to Google Maps in',
+    maps_seconds:     'seconds',
+    maps_btn:         'Go now',
+    already_title:    'You\'ve already left a review',
+    already_body:     'Thank you! Your review has already been recorded.',
+  }
+};
+
+const STORAGE_KEY = 'rvw_state';
+
+let currentLang = 'en';
+let selectedRating = 0;
+
+function detectLanguage() {
+  const saved = localStorage.getItem('lang');
+  if (saved && ['ar','fr','en'].includes(saved)) return saved;
+  const b = (navigator.language || 'fr').toLowerCase();
+  if (b.startsWith('ar')) return 'ar';
+  if (b.startsWith('fr')) return 'fr';
+  if (b.startsWith('en')) return 'en';
+  return CONFIG.defaultLang;
+}
+
+function applyLanguage(lang) {
+  currentLang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (T[lang][key]) el.textContent = T[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (T[lang][key]) el.placeholder = T[lang][key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  const label = document.getElementById('rating-label');
+  if (selectedRating > 0) {
+    label.textContent = T[lang].rating_labels[selectedRating];
+  }
+}
+
+function showView(viewId) {
+  document.querySelectorAll('.view, .overlay').forEach(v => {
+    v.classList.remove('active');
+    if (v.id !== viewId) v.style.display = 'none';
+  });
+  const view = document.getElementById(viewId);
+  if (view) {
+    view.style.display = '';
+    view.classList.add('active');
+  }
+}
+
+function showRatingScreen() {
+  showView('view-rating');
+}
+
+function showAlreadyReviewedScreen() {
+  showView('view-already');
+}
+
+function getReviewState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY));
+  } catch { return null; }
+}
+
+function markAsReviewed(rating) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    rating,
+    ts: Date.now(),
+    fp: generateFingerprint(),
+  }));
+}
+
+function generateFingerprint() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = '18px Arial';
+  ctx.fillText('review🍕', 2, 15);
+  const canvasStr = canvas.toDataURL().slice(-40);
+  const raw = [
+    navigator.userAgent,
+    navigator.language,
+    `${screen.width}x${screen.height}`,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || '',
+    navigator.deviceMemory || '',
+    canvasStr,
+  ].join('||');
+  let hash = 5381;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) + hash) + raw.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function fillStars(rating, container) {
+  const stars = container.querySelectorAll('.star');
+  stars.forEach(s => {
+    const idx = parseInt(s.dataset.index);
+    s.classList.toggle('filled', idx <= rating);
+  });
+}
+
+function handleConfirm() {
+  document.getElementById('view-confirm').classList.remove('active');
+  document.getElementById('view-confirm').style.display = 'none';
+
+  if (selectedRating >= 4) {
+    markAsReviewed(selectedRating);
+    showRedirectScreen();
+    startRedirectCountdown();
+  } else {
+    markAsReviewed(selectedRating);
+    window.location.href = CONFIG.googleFormUrl;
+  }
+}
+
+function showRedirectScreen() {
+  showView('view-redirect');
+}
+
+function startRedirectCountdown() {
+  let count = 3;
+  const el = document.getElementById('countdown-number');
+  el.textContent = count;
+
+  const interval = setInterval(() => {
+    count--;
+    el.textContent = count;
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'countPulse 0.3s ease-out';
+    if (count <= 0) {
+      clearInterval(interval);
+      window.location.href = CONFIG.googleMapsUrl;
+    }
+  }, 1000);
+
+  document.getElementById('go-now-btn').onclick = () => {
+    clearInterval(interval);
+    window.location.href = CONFIG.googleMapsUrl;
+  };
+}
+
+function initPage() {
+  currentLang = detectLanguage();
+  applyLanguage(currentLang);
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyLanguage(btn.dataset.lang);
+      localStorage.setItem('lang', btn.dataset.lang);
+    });
+  });
+
+  const state = getReviewState();
+  if (state) {
+    if (CONFIG.blockDays === 0) {
+      showAlreadyReviewedScreen();
+      return;
+    }
+    const daysPassed = (Date.now() - state.ts) / (1000 * 60 * 60 * 24);
+    if (daysPassed < CONFIG.blockDays) {
+      showAlreadyReviewedScreen();
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  const starContainer = document.getElementById('star-container');
+  const stars = starContainer.querySelectorAll('.star');
+
+  stars.forEach(s => {
+    s.addEventListener('mouseenter', () => {
+      const idx = parseInt(s.dataset.index);
+      fillStars(idx, starContainer);
+      const label = document.getElementById('rating-label');
+      label.textContent = T[currentLang].rating_labels[idx];
+    });
+
+    s.addEventListener('click', () => {
+      selectedRating = parseInt(s.dataset.index);
+      fillStars(selectedRating, starContainer);
+      s.classList.remove('selected');
+      void s.offsetWidth;
+      s.classList.add('selected');
+      const label = document.getElementById('rating-label');
+      label.textContent = T[currentLang].rating_labels[selectedRating];
+
+      setTimeout(() => {
+        const confirmStars = document.getElementById('confirm-stars');
+        confirmStars.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const st = document.createElement('div');
+          st.className = 'star' + (i < selectedRating ? ' filled' : '');
+          st.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+          confirmStars.appendChild(st);
+        }
+        document.getElementById('i18n-confirm-title').textContent = T[currentLang].confirm_title;
+        document.getElementById('i18n-confirm-body').textContent = T[currentLang].confirm_body;
+        document.getElementById('confirm-yes').textContent = T[currentLang].confirm_yes;
+        document.getElementById('confirm-no').textContent = T[currentLang].confirm_no;
+        const overlay = document.getElementById('view-confirm');
+        overlay.style.display = 'flex';
+        overlay.classList.add('active');
+      }, 700);
+    });
+  });
+
+  starContainer.addEventListener('mouseleave', () => {
+    if (selectedRating > 0) {
+      fillStars(selectedRating, starContainer);
+      const label = document.getElementById('rating-label');
+      label.textContent = T[currentLang].rating_labels[selectedRating];
+    } else {
+      fillStars(0, starContainer);
+      document.getElementById('rating-label').textContent = '';
+    }
+  });
+
+  document.getElementById('confirm-yes').addEventListener('click', handleConfirm);
+  document.getElementById('confirm-no').addEventListener('click', () => {
+    document.getElementById('view-confirm').classList.remove('active');
+    document.getElementById('view-confirm').style.display = 'none';
+    selectedRating = 0;
+    fillStars(0, starContainer);
+    document.getElementById('rating-label').textContent = '';
+  });
+
+  showRatingScreen();
+}
+
+document.addEventListener('DOMContentLoaded', initPage);
+</script>
+
+</body>
+</html>
