@@ -262,6 +262,7 @@ const CONFIG = {
   googleFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSet7OxmQ5CUZOCabu4Z940xtNLymq_Budh61EOXmVBVaP_-GA/viewform?usp=dialog',
   blockDays: 0,
   defaultLang: 'fr',
+  storageKey: 'rvw_state',
 };
 // ============================================================
 
@@ -316,7 +317,7 @@ const T = {
   }
 };
 
-const STORAGE_KEY = 'rvw_state';
+const STORAGE_KEY = CONFIG.storageKey;
 
 let currentLang = 'en';
 let selectedRating = 0;
